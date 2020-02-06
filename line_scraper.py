@@ -5,6 +5,13 @@ from datetime import date, timedelta
 import time
 import json
 
+
+
+"""
+A simple script to scrape sports book review for lines. Currently not interecting with the ajax form, needs to be 
+added so that more books can be added.
+"""
+
 '''
 BookID  BookName
 238     Pinnacle
@@ -20,7 +27,8 @@ BookID  BookName
 92      bodog
 
 '''
-DATABASE_PATH = '/home/alfilli/projects/line_maker/data/'
+DATABASE_PATH = '/path/to/desired/database'
+
 BOOKS = {
             'Pinnacle': '238',
             '5Dimes': '19',
@@ -70,6 +78,14 @@ def parse_and_write_data(soup, date, time):
         except Exception:
             return ''
 
+    def score(soup, game_id, homeaway):
+        try:
+            score = soup.find_all('div', attrs = {'class':'score-content'})[game_id].find_all('span', attrs = {'class': 'total'})[homeaway].get_text().strip()
+            return score
+        except Exception:
+            return ''
+
+
     ret = {}
     ret['DATE'] = date
     ret['TIME'] = time
@@ -83,6 +99,8 @@ def parse_and_write_data(soup, date, time):
 
         game['HOME'] = soup.find_all('div', attrs = {'class':'el-div eventLine-team'})[i].find_all('div')[0].get_text().strip()
         game['AWAY'] = soup.find_all('div', attrs = {'class':'el-div eventLine-team'})[i].find_all('div')[1].get_text().strip()
+        game['HOME_SCORE'] = score(soup, i, 0)
+        game['AWAY_SCORE'] = score(soup, i, 1)
 
         lines = []
         for book, id in BOOKS.items():
@@ -113,8 +131,8 @@ def main():
     ##parse the BeautifulSoup page
     #moneyline = parse_and_write_data(soup_ml, todays_date, time_ml)
 
-    start_date = date(2018, 9, 10)
-    end_date = date(2020, 12, 31)
+    start_date = date(2018, 1, 1)
+    end_date = date(2020, 2, 5)
     for single_date in daterange(start_date, end_date):
         date_str = single_date.strftime("%Y%m%d")
         print("Processing date: {}".format(date_str))
