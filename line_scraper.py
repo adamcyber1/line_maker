@@ -99,10 +99,10 @@ def parse_and_write_data(soup, date, time):
         game = {}
         print(str(i+1)+'/'+str(number_of_games))
 
-        game['HOME'] = soup.find_all('div', attrs = {'class':'el-div eventLine-team'})[i].find_all('div')[0].get_text().strip()
-        game['AWAY'] = soup.find_all('div', attrs = {'class':'el-div eventLine-team'})[i].find_all('div')[1].get_text().strip()
-        game['HOME_SCORE'] = score(soup, i, 0)
-        game['AWAY_SCORE'] = score(soup, i, 1)
+        game['HOME'] = soup.find_all('div', attrs = {'class':'el-div eventLine-team'})[i].find_all('div')[1].get_text().strip()
+        game['AWAY'] = soup.find_all('div', attrs = {'class':'el-div eventLine-team'})[i].find_all('div')[0].get_text().strip()
+        game['HOME_SCORE'] = score(soup, i, 1)
+        game['AWAY_SCORE'] = score(soup, i, 0)
         game['HOME_WIN'] = bool(game['HOME_SCORE'] > game['AWAY_SCORE'])
 
         lines = []
@@ -110,8 +110,8 @@ def parse_and_write_data(soup, date, time):
             line = {}
 
             line['BOOK'] = book
-            line['LINE_HOME'] = book_line(id, i, 0)
-            line['LINE_AWAY'] = book_line(id, i, 1)
+            line['LINE_HOME'] = book_line(id, i, 1)
+            line['LINE_AWAY'] = book_line(id, i, 0)
             lines.append(line)
 
         game["LINES"] = lines
@@ -135,7 +135,7 @@ def main():
     #moneyline = parse_and_write_data(soup_ml, todays_date, time_ml)
 
     start_date = date(2018, 1, 1)
-    end_date = date(2020, 2, 5)
+    end_date = date(2020, 2, 14)
     for single_date in daterange(start_date, end_date):
         date_str = single_date.strftime("%Y%m%d")
         print("Processing date: {}".format(date_str))

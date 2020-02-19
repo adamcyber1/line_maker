@@ -8,6 +8,7 @@ from pandas import DataFrame, concat, Series
 from json import loads
 from re import match
 from math import log
+import glob
 
 #supported bookie so far
 BOOKIES = ['PINNACLE', '5DIMES', 'BOOKMAKER', 'BETONLINE', 'HERITAGE']
@@ -45,22 +46,32 @@ def combine_dataframes(*args):
     return concat(frames)
 
 def get_best_home_line(game_row: Series):
-    best_line = -999999
+    best_line = None
     for column in game_row.iteritems():
         if match('.*LINE_HOME$', column[0]):
-            line = int(column[1])
-            best_line = max(best_line, line)
+            if column[1] is not '' and column[1] is not None:
+                line = int(column[1])
+
+                if best_line is None:
+                    best_line = line
+                else:
+                    best_line = max(best_line, line)
 
     return best_line
 
 def get_best_away_line(game_row: Series):
-    best_line = -999999
+    best_line = None
     for column in game_row.iteritems():
         if match('.*LINE_AWAY$', column[0]):
-            line = int(column[1])
-            best_line = max(best_line, line)
+            if column[1] is not '' and column[1] is not None:
+                line = int(column[1])
 
-    return int(best_line)
+                if best_line is None:
+                    best_line = line
+                else:
+                    best_line = max(best_line, line)
+
+    return best_line
 
 def add_best_lines(df: DataFrame):
     """
@@ -97,12 +108,14 @@ def special_log_loss_binary(game_row: Series):
     :param game_row:
     :return:
     """
+
+    if game_row.BEST_LINE_HOME is None or game_row.BEST_LINE_AWAY is None:
+        return None
+
     home_prob = probability(game_row.BEST_LINE_HOME)
     away_prob = probability(game_row.BEST_LINE_AWAY)
     virtual_home_prob = 1 - away_prob
     virtual_away_prob = 1 - home_prob
-
-
 
     #predicted = favorite_prob
     actual = int(game_row.HOME_WIN)
@@ -117,6 +130,9 @@ def special_log_loss_binary(game_row: Series):
     return log_likelihood_adjusted
 
 def basic_log_loss_binary(game_row: Series):
+    if game_row.BEST_LINE_HOME is None or game_row.BEST_LINE_AWAY is None:
+        return None
+
     predicted = 0.5 * (probability(game_row.BEST_LINE_HOME) + (1-probability(game_row.BEST_LINE_AWAY)))
     actual = int(game_row.HOME_WIN)
 
@@ -146,6 +162,28 @@ def main():
         df = add_best_lines(df)
         df = add_log_loss(df)
         print(df)
+
+    df = None
+    for filename in glob.glob('/home/alfilli/projects/line_maker/data/*.json'):
+
+        with open(filename, 'r') as file:
+            print(filename)
+            current_df = None
+            data = file.read()
+            j = loads(data)
+            current_df = record_to_dataframe(j)
+            if current_df.empty:
+                continue
+            current_df = add_best_lines(current_df)
+            current_df = add_log_loss(current_df)
+
+        df = combine_dataframes(df, current_df)
+
+    column_means = df.mean(axis = 0, skipna = True)
+    row_means = df.mean(axis = 1, skipna = True)
+    print(df)
+
+
 
 if __name__ == '__main__':
     main()
