@@ -1,3 +1,4 @@
+import os
 import requests
 from bs4 import BeautifulSoup
 import datetime
@@ -5,7 +6,8 @@ from datetime import date, timedelta
 import time
 import json
 
-
+__location__ = os.path.realpath(
+    os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 """
 A simple script to scrape sports book review for lines. Currently not interecting with the ajax form, needs to be 
@@ -27,7 +29,7 @@ BookID  BookName
 92      bodog
 
 '''
-DATABASE_PATH = '/path/to/desired/database'
+DATABASE_PATH = __location__ + '/data/'
 
 BOOKS = {
             'Pinnacle': '238',
@@ -35,9 +37,9 @@ BOOKS = {
             'Bookmaker': '93',
             'BetOnline': '1096',
             'Heritage': '169',
-            'BetDSI': '123',
-            'Bovada': '999996',
-            'Youwager': '139'
+            #'BetDSI': '123',
+            #'Bovada': '999996',
+            #'Youwager': '139'
         }
 
 def daterange(start_date, end_date):
@@ -101,6 +103,7 @@ def parse_and_write_data(soup, date, time):
         game['AWAY'] = soup.find_all('div', attrs = {'class':'el-div eventLine-team'})[i].find_all('div')[1].get_text().strip()
         game['HOME_SCORE'] = score(soup, i, 0)
         game['AWAY_SCORE'] = score(soup, i, 1)
+        game['HOME_WIN'] = bool(game['HOME_SCORE'] > game['AWAY_SCORE'])
 
         lines = []
         for book, id in BOOKS.items():
@@ -142,7 +145,7 @@ def main():
             continue
         data = parse_and_write_data(soup, date_str, time)
 
-        with open(DATABASE_PATH + date_str + '.json', 'w+') as file:
+        with open(DATABASE_PATH + date_str + '.json', 'w') as file:
             json.dump(data, file)
 
 if __name__ == '__main__':
