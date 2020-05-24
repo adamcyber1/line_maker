@@ -154,7 +154,7 @@ def add_log_loss(df : DataFrame):
 
 
 def main():
-    with open("/home/alfilli/projects/line_maker/data/20180102.json", 'r') as f:
+    with open("..../data/20180102.json", 'r') as f:
         string = f.read()
         j = loads(string)
         df = record_to_dataframe(j)
@@ -164,7 +164,7 @@ def main():
         print(df)
 
     df = None
-    for filename in glob.glob('/home/alfilli/projects/line_maker/data/*.json'):
+    for filename in glob.glob('....../data/*.json'):
 
         with open(filename, 'r') as file:
             print(filename)
